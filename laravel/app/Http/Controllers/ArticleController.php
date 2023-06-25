@@ -6,13 +6,14 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redirect;
 use App\Models\Article;
 use App\Http\Requests\StoreArticleRequest;
 
 class ArticleController extends Controller
 {
     // 画像保存先ディレクトリ
-    const IMAGE_DIR = 'images/artcles';
+    const IMAGE_DIR = 'images/articles';
 
     /**
      * Display a listing of the resource.
@@ -21,8 +22,9 @@ class ArticleController extends Controller
      */
     public function index()
     {
-        $articles = Article::paginate(5);
-        return view('index', compact('articles'));
+        $articles = Article::orderBy('created_at', 'desc')->paginate(5);
+        $imageDir = self::IMAGE_DIR;
+        return view('index', compact('articles', 'imageDir'));
     }
 
     /**
@@ -50,12 +52,13 @@ class ArticleController extends Controller
                 'image' => $this->imageUpload($request),
             ]);
             DB::commit();
-
-            return $this->index();
         } catch (\Exception $e) {
             DB::rollback();
             Log::error($e->getMessage());
+            return Redirect::route('articles.create')->with('fail', '投稿に失敗しました。error: '.$e->getMessage());
         }
+
+        return Redirect::route('articles.index')->with('success', '投稿が完了しました。');
     }
 
     /**
@@ -66,9 +69,7 @@ class ArticleController extends Controller
      */
     public function show($id)
     {
-        $article = (new Article)->find($id);
-        if (!$article) return $this->index();
-
+        // 現在は使用しないがshow()を残さないとリソースコントローラーが機能しなくなるので残しています。
     }
 
     /**
@@ -80,6 +81,9 @@ class ArticleController extends Controller
     public function edit($id)
     {
         $article = (new Article)->find($id);
+        if (!$id || !$article) {
+            return Redirect::route('articles.index');
+        }
         return view('form', compact('article'));
     }
 
@@ -96,6 +100,21 @@ class ArticleController extends Controller
         $article->content = $request->content;
         $article->save();
         return $this->index();
+
+        try {
+            DB::beginTransaction();
+            Article::create([
+                'content' => $request->content,
+                'image' => $this->imageUpload($request),
+            ]);
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error($e->getMessage());
+            return Redirect::route('articles.edit')->with('fail', '投稿に失敗しました。error: '.$e->getMessage());
+        }
+
+        return Redirect::route('articles.index')->with('success', '投稿が完了しました。');
     }
 
     /**
@@ -106,7 +125,17 @@ class ArticleController extends Controller
      */
     public function destroy($id)
     {
-        //
+        if (!$id) {
+            return response()->json(['redirect' => route('articles.index'), 'status' => 'fail']);
+        }
+
+        $article = (new Article)->find($id);
+        if (!$article) {
+            return response()->json(['redirect' => route('articles.index'), 'status' => 'fail']);
+        }
+
+        $article->delete();
+        return response()->json(['redirect' => route('articles.index'), 'status' => 'success']);
     }
 
     /**
@@ -121,15 +150,5 @@ class ArticleController extends Controller
         $filename = $request->image->getClientOriginalName();
         $request->image->storeAs(self::IMAGE_DIR, $filename, 'public');
         return $filename;
-    }
-
-    /**
-     * 画像の取得
-     *
-     * @return string
-     */
-    private function getImage()
-    {
-
     }
 }

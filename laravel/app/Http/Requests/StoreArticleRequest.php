@@ -25,7 +25,7 @@ class StoreArticleRequest extends FormRequest
     {
         return [
             'content' => 'required',
-            'image' => 'nullable|image|mimes:jpg,png,jpeg,gif,svg',
+            'image' => 'nullable|mimes:jpg,png,jpeg',
         ];
     }
 }

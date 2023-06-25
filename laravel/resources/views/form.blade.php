@@ -1,9 +1,18 @@
 @extends('layout.base')
 
+@section('head')
+<meta name="csrf-token" content="{{ csrf_token() }}">
+@endsection
+
 @section('title', '1行日記サイト/投稿フォーム')
 @section('content')
 <div class="container mt-5">
-    <form action="/articles" method="post">
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+    <form action="/articles" method="post" enctype="multipart/form-data">
         @csrf
         <div class="form-group">
             <label for="content">1行日記</label>
@@ -13,13 +22,24 @@
             @enderror
         </div>
         <div class="form-group">
-            <label for="imageUpload">画像アップロード</label>
-            <input type="file" class="form-control-file" id="imageUpload" name="image">
+            <label for="image">画像アップロード</label>
+            <input type="file" class="form-control-file" id="image" name="image">
             @error('image')
                 <div class="alert alert-danger">{{ $message }}</div>
             @enderror
         </div>
-        <button type="submit" class="btn btn-primary">投稿</button>
+        <div class="row">
+            <div class="col-3">
+                <button type="button" class="btn btn-danger" id="delete" data-id="{{ $article->id }}">削除</button>
+            </div>
+            <div class="col-3 ml-auto text-right">
+                <button type="submit" class="btn btn-primary">投稿</button>
+            </div>
+        </div>
     </form>
 </div>
+@endsection
+
+@section('script')
+    <script src="{{ asset('/js/articles.js') }}"></script>
 @endsection
