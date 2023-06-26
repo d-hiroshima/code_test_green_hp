@@ -24,7 +24,7 @@ class StoreArticleRequest extends FormRequest
     public function rules()
     {
         return [
-            'content' => 'required',
+            'content' => 'required|max:50',
             'image' => 'nullable|mimes:jpg,png,jpeg',
         ];
     }

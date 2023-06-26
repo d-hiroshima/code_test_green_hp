@@ -23,17 +23,22 @@
         </div>
         <div class="form-group">
             <label for="image">画像アップロード</label>
-            <input type="file" class="form-control-file" id="image" name="image">
+            <input type="file" class="form-control-file" id="image" name="image" value="">
+            @if (isset($article) && $article->image)
+                <img class="img-fluid" src="{{ asset('storage/'.$imageDir.'/'.$article->image) }}" alt="画像記事">
+            @endif
             @error('image')
                 <div class="alert alert-danger">{{ $message }}</div>
             @enderror
         </div>
         <div class="row">
-            <div class="col-3">
-                <button type="button" class="btn btn-danger" id="delete" data-id="{{ $article->id }}">削除</button>
-            </div>
+            @if (isset($article))
+                <div class="col-3">
+                    <button type="button" class="btn btn-danger" id="delete" data-id="{{ $article->id }}">削除</button>
+                </div>
+            @endif
             <div class="col-3 ml-auto text-right">
-                <button type="submit" class="btn btn-primary">投稿</button>
+                <button type="submit" class="btn btn-primary">{{ $submit }}</button>
             </div>
         </div>
     </form>

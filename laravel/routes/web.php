@@ -14,7 +14,7 @@ use App\Http\Controllers\ArticleController;
 |
 */
 
-Route::get('/', [ArticleController::class, 'index']);
+Route::get('/', [ArticleController::class, 'index'])->name('index');
 
 // 記事投稿のリソースコントローラー
 Route::resource('articles', ArticleController::class);
